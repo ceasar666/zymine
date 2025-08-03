@@ -428,7 +428,7 @@ const getPrice = async () => {
     try {
         const contract = blockChain.getMineContract();
         const zyPrice = await contract.zyPrice();
-        state.zyPrice = $shiftedByFixed(zyPrice.toString(), -18, 2);
+        state.zyPrice = $shiftedByFixed(zyPrice.toString(), -18, 5);
     } catch (e: any) {}
 };
 
