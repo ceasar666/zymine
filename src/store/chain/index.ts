@@ -39,7 +39,7 @@ export const useBlockChain = defineStore('block-chain-store', {
                 },
                 97: {
                     usdtContract: '0x0FB3c077479113dF18f9f51Dc282b09bB0461000',
-                    mineContract: '0xe8dd5681754c66711cBF60247aB5993C996AB7B2',
+                    mineContract: '0xBd7D9Aa35387105d5359596e7F8C5F2F23C72110',
                 },
             },
             firstAddress: {
