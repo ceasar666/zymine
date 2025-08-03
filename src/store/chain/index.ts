@@ -34,8 +34,8 @@ export const useBlockChain = defineStore('block-chain-store', {
             // base
             contract_address: {
                 56: {
-                    usdtContract: '',
-                    mineContract: '',
+                    usdtContract: '0x55d398326f99059fF775485246999027B3197955',
+                    mineContract: '0x4A44BaC3aD9B2E99154b5cE03f4d84FA7F0ddA5e',
                     multicall: '0x38ce767d81de3940cfa5020b55af1a400ed4f657',
                 },
                 97: {
@@ -45,7 +45,7 @@ export const useBlockChain = defineStore('block-chain-store', {
                 },
             },
             firstAddress: {
-                56: '',
+                56: '0x57a7B58A53C5629DA3BE495Bc68d8fEB5e603348',
                 97: '0x9Ee20a74588A1D89e028a2be4CCF842ac9352111',
             },
             lange: 'zh',
