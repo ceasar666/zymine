@@ -26,13 +26,13 @@
                     <div class="right">
                         <el-popover popper-class="menu-popover" trigger="click" placement="bottom-end" v-model:visible="state.daysPopoverVisible">
                             <template #reference>
-                                <div class="days">
-                                    {{ state.days }}天
+                                <div class="days" :class="{ disabled: state.days === '' }">
+                                    {{ state.days ? state.days + '天' : '请选择' }}
                                     <i class="iconfont">&#xe6f7;</i>
                                 </div>
                             </template>
                             <div class="menu-list">
-                                <div v-for="(item, index) in state.days_list" :key="index" class="item" :class="{ active: state.days === item.value }" @click="handleDaysSelect(item.value)">
+                                <div v-for="(item, index) in state.days_list" :key="index" class="item" :class="{ active: state.days === item.value, disabled: item.value === 15 ? state.userInfo.balance15 > 0 : state.userInfo.balance30 > 0 }" @click="handleDaysSelect(item.value)">
                                     {{ item.label }}
                                 </div>
                             </div>
@@ -100,9 +100,9 @@ const state = reactive({
             value: 30,
         },
     ],
-    days: 15,
+    days: '' as string | number,
 
-    amount: '' as string | number,
+    amount: 100 as string | number,
 
     balance: '--' as string | number,
     approveLoading: false,
@@ -183,6 +183,8 @@ const keyupAmount = () => {
 };
 
 const handleDaysSelect = (value: number) => {
+    if (value === 15 && state.userInfo.balance15 > 0) return;
+    if (value === 30 && state.userInfo.balance30 > 0) return;
     state.days = value;
     state.daysPopoverVisible = false;
 };
@@ -289,9 +291,11 @@ const getBaseInfo = async () => {
         state.start = start;
         state.minAmount = $shiftedByFixed(minAmount.toString(), -18, 0);
         state.maxAmount = $shiftedByFixed(maxAmount.toString(), -18, 0);
-        state.pendingReward15 = $shiftedByFixed(pendingReward15.toString(), -18, 2);
-        state.pendingReward30 = $shiftedByFixed(pendingReward30.toString(), -18, 2);
+        state.pendingReward15 = $shiftedByFixed(pendingReward15.toString(), -18, 6);
+        state.pendingReward30 = $shiftedByFixed(pendingReward30.toString(), -18, 6);
         if (state.userInfo.startTime15 || state.userInfo.startTime30) loopTime();
+        if (state.userInfo.balance15 === 0) state.days = 15;
+        else if (state.userInfo.balance30 === 0) state.days = 30;
         else clearInterval(timer.value);
     } catch (e: any) {}
 };
@@ -300,7 +304,6 @@ const getPrice = async () => {
     try {
         const contract = blockChain.getMineContract();
         const zyPrice = await contract.zyPrice();
-        console.log('zyPrice::', zyPrice.toString());
         state.zyPrice = $shiftedByFixed(zyPrice.toString(), -18, 2);
     } catch (e: any) {}
 };
@@ -415,7 +418,7 @@ const init = async () => {
         state.shareid = inviter === blockChain.account ? '' : inviter;
         await getAllowance();
         await getBalance();
-        getPrice;
+        getPrice();
         getBaseInfo();
         // setInterval(() => {
         //     getPrice();
@@ -605,6 +608,9 @@ onBeforeUnmount(() => {
             }
             &.active {
                 background: #7fff00;
+            }
+            &.disabled {
+                background: rgba(146, 145, 140, 0.8) !important;
             }
         }
     }
@@ -796,6 +802,11 @@ onBeforeUnmount(() => {
                         color: #000;
                         font-weight: 600;
                         gap: 0.11rem;
+                        &.disabled {
+                            font-size: 0.13rem;
+                            gap: 0.06rem;
+                            color: #bfbfbf;
+                        }
                         i {
                             color: #000;
                         }
