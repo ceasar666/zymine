@@ -170,12 +170,10 @@ const showInviterLink = computed(() => {
     return state.userInfo.sons === '--' || (state.userInfo.balance15 === 0 && state.userInfo.balance30 === 0);
 });
 const claim15Disabled = computed(() => {
-    //return state.pendingReward15 === '--' || !state.pendingReward15 || Object.values(state.userInfo.time15Diff).reduce((acc: number, item) => acc + Number(item || 0), 0) > 0;
-    return false;
+    return state.pendingReward15 === '--' || !state.pendingReward15 || Object.values(state.userInfo.time15Diff).reduce((acc: number, item) => acc + Number(item || 0), 0) > 0;
 });
 const claim30Disabled = computed(() => {
-    //return state.pendingReward30 === '--' || !state.pendingReward30 || Object.values(state.userInfo.time30Diff).reduce((acc: number, item) => acc + Number(item || 0), 0) > 0;
-    return false;
+    return state.pendingReward30 === '--' || !state.pendingReward30 || Object.values(state.userInfo.time30Diff).reduce((acc: number, item) => acc + Number(item || 0), 0) > 0;
 });
 
 const inviterLink = computed(() => {
