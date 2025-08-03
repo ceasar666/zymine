@@ -5,8 +5,8 @@
             <div class="title">邀请将士加入赤壁战场</div>
             <div class="content">
                 <div class="lib">
-                    邀请链接：{{ $hash(inviterLink, 20, 7) }}
-                    <div @click="$copy(inviterLink)">复制链接</div>
+                    邀请链接：{{ showInviterLink ? '--' : $hash(inviterLink, 20, 7) }}
+                    <div v-if="!showInviterLink" @click="$copy(inviterLink)">复制链接</div>
                 </div>
                 <div class="lib">已邀请数：{{ state.userInfo.sons }}人</div>
                 <div class="lib">已获奖励：{{ state.userInfo.rewards }} USDT</div>
@@ -166,6 +166,9 @@ watch(
     }
 );
 
+const showInviterLink = computed(() => {
+    return state.userInfo.sons === '--' || (state.userInfo.balance15 === 0 && state.userInfo.balance30 === 0);
+});
 const claim15Disabled = computed(() => {
     return state.pendingReward15 === '--' || !state.pendingReward15 || Object.values(state.userInfo.time15Diff).reduce((acc: number, item) => acc + Number(item || 0), 0) > 0;
 });
