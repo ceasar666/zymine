@@ -20,7 +20,7 @@
                 <div class="section">
                     <div class="left">
                         <img src="~images/home/104.png" alt="" />
-                        <input type="text" placeholder="0.0" v-model="state.amount" @input="keyupAmount" />
+                        <input type="text" placeholder="0.0" disabled v-model="state.amount" @input="keyupAmount" />
                         <span>USDT</span>
                     </div>
                     <div class="right">
@@ -367,15 +367,24 @@ const getBaseInfo = async () => {
         const [blockNumber, returnData] = await multicallContract.callStatic.aggregate(calls);
         console.log('blockNumber::', blockNumber.toString());
         console.log('returnData::', returnData);
-        const [start, maxSupplyPerDay, getStakedToday, minAmount, maxAmount, userInfo, pendingReward15, pendingReward30] = returnData.map((data: string, index: number) => {
-            if (index === 5) {
-                // userInfo返回的是结构体，需要特殊处理
-                return contract.interface.decodeFunctionResult('userInfo', data);
-            } else {
-                const functionNames = ['start', 'maxSupplyPerDay', 'getStakedToday', 'minAmount', 'maxAmount', 'userInfo', 'pendingReward15', 'pendingReward30'];
-                return contract.interface.decodeFunctionResult(functionNames[index], data)[0];
-            }
-        });
+
+        const start = contract.interface.decodeFunctionResult('start', returnData[0])[0];
+        const maxSupplyPerDay = contract.interface.decodeFunctionResult('maxSupplyPerDay', returnData[1])[0];
+        const getStakedToday = contract.interface.decodeFunctionResult('getStakedToday', returnData[2])[0];
+        const minAmount = contract.interface.decodeFunctionResult('minAmount', returnData[3])[0];
+        const maxAmount = contract.interface.decodeFunctionResult('maxAmount', returnData[4])[0];
+        const userInfo = contract.interface.decodeFunctionResult('userInfo', returnData[5]);
+        const pendingReward15 = contract.interface.decodeFunctionResult('pendingReward15', returnData[6])[0];
+        const pendingReward30 = contract.interface.decodeFunctionResult('pendingReward30', returnData[7])[0];
+        // const [start, maxSupplyPerDay, getStakedToday, minAmount, maxAmount, userInfo, pendingReward15, pendingReward30] = returnData.map((data: string, index: number) => {
+        //     if (index === 5) {
+        //         // userInfo返回的是结构体，需要特殊处理
+        //         return contract.interface.decodeFunctionResult('userInfo', data);
+        //     } else {
+        //         const functionNames = ['start', 'maxSupplyPerDay', 'getStakedToday', 'minAmount', 'maxAmount', 'userInfo', 'pendingReward15', 'pendingReward30'];
+        //         return contract.interface.decodeFunctionResult(functionNames[index], data)[0];
+        //     }
+        // });
 
         // console.log('start::', start);
         // console.log('minAmount::', minAmount);
