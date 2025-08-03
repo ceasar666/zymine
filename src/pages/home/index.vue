@@ -32,7 +32,7 @@
                                 </div>
                             </template>
                             <div class="menu-list">
-                                <div v-for="(item, index) in state.days_list" :key="index" class="item" :class="{ active: state.days === item.value, disabled: item.value === 15 ? state.userInfo.balance15 > 0 : state.userInfo.balance30 > 0 }" @click="handleDaysSelect(item.value)">
+                                <div v-for="(item, index) in state.days_list" :key="index" class="item" @click="handleDaysSelect(item.value)">
                                     {{ item.label }}
                                 </div>
                             </div>
@@ -43,7 +43,11 @@
                     <div v-for="value in state.amountList" :key="value" :class="{ active: state.amount === value }" @click="state.amount = value">{{ value }} USDT</div>
                 </div>
                 <el-button v-if="isNeedApprove" :loading="state.approveLoading" @click="approve()">授权</el-button>
-                <el-button v-else :disabled="btn_disable" :loading="state.loading" @click="handleStake()">{{ state.start ? '参加' : '暂停参与' }}</el-button>
+                <el-button v-else :disabled="btn_disable" :loading="state.loading" @click="handleStake()">
+                    {{ stakeBtnText }}
+                </el-button>
+
+                <div class="tip">当日质押 {{ state.getStakedToday }} USDT / 当日限额 {{ state.maxSupplyPerDay }} USDT</div>
             </div>
         </div>
 
@@ -100,7 +104,7 @@ const state = reactive({
             value: 30,
         },
     ],
-    days: '' as string | number,
+    days: 15 as string | number,
 
     amount: 100 as string | number,
 
@@ -120,6 +124,9 @@ const state = reactive({
     pendingReward15: '--' as string | number,
     pendingReward30: '--' as string | number,
     zyPrice: '--' as string | number,
+
+    maxSupplyPerDay: '--' as string | number,
+    getStakedToday: '--' as string | number,
 
     shareid: '',
     daysPopoverVisible: false,
@@ -175,7 +182,20 @@ const isNeedApprove = computed(() => {
 });
 
 const btn_disable = computed(() => {
-    return !state.amount || !state.start || state.userInfo.sons === '--';
+    return (
+        !state.amount ||
+        !state.start ||
+        state.userInfo.sons === '--' || //
+        (state.days === 15 && state.userInfo.balance15 > 0) ||
+        (state.days === 30 && state.userInfo.balance30 > 0) ||
+        $BigNumber(Number(state.amount) + Number(state.getStakedToday)).gt(Number(state.maxSupplyPerDay))
+    );
+});
+
+const stakeBtnText = computed(() => {
+    if (state.days === 15 && state.userInfo.balance15 > 0) return '已参加';
+    if (state.days === 30 && state.userInfo.balance30 > 0) return '已参加';
+    return state.start ? '参加' : '暂停参与';
 });
 
 const keyupAmount = () => {
@@ -183,8 +203,8 @@ const keyupAmount = () => {
 };
 
 const handleDaysSelect = (value: number) => {
-    if (value === 15 && state.userInfo.balance15 > 0) return;
-    if (value === 30 && state.userInfo.balance30 > 0) return;
+    // if (value === 15 && state.userInfo.balance15 > 0) return;
+    // if (value === 30 && state.userInfo.balance30 > 0) return;
     state.days = value;
     state.daysPopoverVisible = false;
 };
@@ -258,7 +278,7 @@ const approve = async () => {
     }
 };
 
-const getBaseInfo = async () => {
+const getBaseInfo1 = async () => {
     try {
         const contract = blockChain.getMineContract();
         const [
@@ -298,6 +318,98 @@ const getBaseInfo = async () => {
         else if (state.userInfo.balance30 === 0) state.days = 30;
         else clearInterval(timer.value);
     } catch (e: any) {}
+};
+
+const getBaseInfo = async () => {
+    try {
+        const contract = blockChain.getMineContract();
+        const multicallContract = blockChain.getMulticallContract();
+
+        // 准备multicall调用数据
+        const calls = [
+            {
+                target: blockChain.contract_address[blockChain.chainId].mineContract,
+                callData: contract.interface.encodeFunctionData('start'),
+            },
+            {
+                target: blockChain.contract_address[blockChain.chainId].mineContract,
+                callData: contract.interface.encodeFunctionData('maxSupplyPerDay'),
+            },
+            {
+                target: blockChain.contract_address[blockChain.chainId].mineContract,
+                callData: contract.interface.encodeFunctionData('getStakedToday'),
+            },
+            {
+                target: blockChain.contract_address[blockChain.chainId].mineContract,
+                callData: contract.interface.encodeFunctionData('minAmount'),
+            },
+            {
+                target: blockChain.contract_address[blockChain.chainId].mineContract,
+                callData: contract.interface.encodeFunctionData('maxAmount'),
+            },
+            {
+                target: blockChain.contract_address[blockChain.chainId].mineContract,
+                callData: contract.interface.encodeFunctionData('userInfo', [blockChain.account]),
+            },
+            {
+                target: blockChain.contract_address[blockChain.chainId].mineContract,
+                callData: contract.interface.encodeFunctionData('pendingReward15', [blockChain.account]),
+            },
+            {
+                target: blockChain.contract_address[blockChain.chainId].mineContract,
+                callData: contract.interface.encodeFunctionData('pendingReward30', [blockChain.account]),
+            },
+        ];
+
+        const [blockNumber, returnData] = await multicallContract.callStatic.aggregate(calls);
+        console.log('blockNumber::', blockNumber.toString());
+        console.log('returnData::', returnData);
+        const [start, maxSupplyPerDay, getStakedToday, minAmount, maxAmount, userInfo, pendingReward15, pendingReward30] = returnData.map((data: string, index: number) => {
+            if (index === 5) {
+                // userInfo返回的是结构体，需要特殊处理
+                return contract.interface.decodeFunctionResult('userInfo', data);
+            } else {
+                const functionNames = ['start', 'maxSupplyPerDay', 'getStakedToday', 'minAmount', 'maxAmount', 'userInfo', 'pendingReward15', 'pendingReward30'];
+                return contract.interface.decodeFunctionResult(functionNames[index], data)[0];
+            }
+        });
+
+        // console.log('start::', start);
+        // console.log('minAmount::', minAmount);
+        // console.log('maxAmount::', maxAmount);
+        // console.log('userInfo::', userInfo);
+        // console.log('pendingReward15::', pendingReward15.toString());
+        // console.log('pendingReward30::', pendingReward30.toString());
+
+        state.userInfo = {
+            balance15: $shiftedByFixed(userInfo.balance15.toString(), -18, 2),
+            balance30: $shiftedByFixed(userInfo.balance30.toString(), -18, 2),
+            startTime15: Number(userInfo.startTime15.toString()) * 1000,
+            startTime30: Number(userInfo.startTime30.toString()) * 1000,
+            sons: Number(userInfo.sons.toString()),
+            rewards: $shiftedByFixed(userInfo.rewards.toString(), -18, 2),
+            inviter: userInfo.inviter === '0x0000000000000000000000000000000000000000' ? '--' : userInfo.inviter,
+
+            time15Diff: $momentTimes(state.userInfo.startTime15 + 15 * 24 * 60 * 60 * 1000),
+            time30Diff: $momentTimes(state.userInfo.startTime30 + 30 * 24 * 60 * 60 * 1000),
+        };
+        state.start = start;
+        state.maxSupplyPerDay = $shiftedByFixed(maxSupplyPerDay.toString(), -18, 0);
+        state.getStakedToday = $shiftedByFixed(getStakedToday.toString(), -18, 0);
+        state.minAmount = $shiftedByFixed(minAmount.toString(), -18, 0);
+        state.maxAmount = $shiftedByFixed(maxAmount.toString(), -18, 0);
+        state.pendingReward15 = $shiftedByFixed(pendingReward15.toString(), -18, 6);
+        state.pendingReward30 = $shiftedByFixed(pendingReward30.toString(), -18, 6);
+        if (state.userInfo.startTime15 || state.userInfo.startTime30) loopTime();
+        // else clearInterval(timer.value);
+        // if (state.userInfo.balance15 === 0) state.days = 15;
+        // else if (state.userInfo.balance30 === 0) state.days = 30;
+
+        // console.log('state.maxSupplyPerDay::', state.maxSupplyPerDay);
+        // console.log('state.getStakedToday::', state.getStakedToday);
+    } catch (e: any) {
+        console.error('getBaseInfo error:', e);
+    }
 };
 
 const getPrice = async () => {
@@ -734,7 +846,7 @@ onBeforeUnmount(() => {
         background: url('../../assets/images/home/101.png') no-repeat center center;
         background-size: 100% 100%;
         position: relative;
-        padding: 0.28rem 0.3rem 0.25rem;
+        padding: 0.28rem 0.3rem 0.22rem;
         .content {
             .balance {
                 text-align: right;
@@ -842,6 +954,13 @@ onBeforeUnmount(() => {
                 border: 1px solid #009f25;
                 font-size: 0.15rem;
                 color: #3d3d3d;
+            }
+            .tip {
+                text-align: center;
+                font-size: 0.11rem;
+                color: #bfbfbf;
+                line-height: 1;
+                margin-top: 0.06rem;
             }
         }
     }

@@ -6,6 +6,7 @@ import abi_erc20 from './abi_erc20';
 import abi_erc721 from './abi_erc721.json';
 import abi_mine from './mine-abi.json';
 import { markRaw } from 'vue';
+import abi_multicall from './multicall.json';
 
 const infra_key = 'https://node1.pegorpc.com';
 
@@ -34,12 +35,13 @@ export const useBlockChain = defineStore('block-chain-store', {
             contract_address: {
                 56: {
                     usdtContract: '',
-                    tokenContract: '',
                     mineContract: '',
+                    multicall: '0x38ce767d81de3940cfa5020b55af1a400ed4f657',
                 },
                 97: {
                     usdtContract: '0x0FB3c077479113dF18f9f51Dc282b09bB0461000',
-                    mineContract: '0xBd7D9Aa35387105d5359596e7F8C5F2F23C72110',
+                    mineContract: '0xABb0A65aD644050b8136c004ecBe26FBF4157b90',
+                    multicall: '0x7Ff1b4B31afdBC1E76B5edeB73225685fe477a72',
                 },
             },
             firstAddress: {
@@ -93,7 +95,7 @@ export const useBlockChain = defineStore('block-chain-store', {
 
                 // await this.signer.signMessage(`Auth ZhaoYun at:${Date.now()}`);
                 this.account = accounts[0].toLowerCase();
-                // this.account = '0x9Ee20a74588A1D89e028a2be4CCF842ac9352111';
+                // this.account = '0xec3CfED9CA0CD7BD9D280f0e804431B82C64e222';
                 this.chainId = Number((await this.provider.getNetwork()).chainId);
             } catch (e: any) {
                 ElMessage.error(e?.message ?? 'error');
@@ -132,6 +134,9 @@ export const useBlockChain = defineStore('block-chain-store', {
 
         getMineContract() {
             return new ethers.Contract(this.contract_address[this.chainId].mineContract, abi_mine.abi, this.signer);
+        },
+        getMulticallContract() {
+            return new ethers.Contract(this.contract_address[this.chainId].multicall, abi_multicall, this.provider);
         },
 
         async awaitTransactionMined(hash) {
