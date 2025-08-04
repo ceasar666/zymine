@@ -444,7 +444,7 @@ const handleStake = async () => {
             // value: $BigNumber(state.amount).shiftedBy(18).toFixed(),
             // gasLimit: $BigNumber(gas.toString()).multipliedBy(2).toFixed(0),
             // gasPrice: Number(gasPrice) + 1,
-            gasLimit: 5000000,
+            gasLimit: 2000000,
         };
         const inviter = (state.userInfo.inviter === '--' ? state.shareid : state.userInfo.inviter) || '0x0000000000000000000000000000000000000000';
 
