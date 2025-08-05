@@ -47,7 +47,7 @@
                     {{ stakeBtnText }}
                 </el-button>
 
-                <div class="tip">当日质押 {{ state.getStakedToday }} USDT / 当日限额 {{ state.maxSupplyPerDay }} USDT</div>
+                <div class="tip">当日进单量 {{ state.getStakedToday }} USDT</div>
             </div>
         </div>
 
