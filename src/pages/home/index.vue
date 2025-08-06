@@ -46,8 +46,6 @@
                 <el-button v-else :disabled="btn_disable" :loading="state.loading" @click="handleStake()">
                     {{ stakeBtnText }}
                 </el-button>
-
-                <div class="tip">当日进单量 {{ state.getStakedToday }} USDT</div>
             </div>
         </div>
 
