@@ -56,7 +56,7 @@
                 <div>倒计时：{{ state.userInfo.time15Diff.days }}天{{ state.userInfo.time15Diff.hours }}小时{{ state.userInfo.time15Diff.minutes }}分钟{{ state.userInfo.time15Diff.seconds }}秒</div>
                 <div>收益表：{{ state.pendingReward15 }} USDT</div>
             </div>
-            <el-button :loading="state.claim15Loading" :disabled="claim15Disabled" @click="handleClaim(15)">到期领币</el-button>
+            <el-button :loading="state.claim15Loading" :disabled="true" @click="handleClaim(15)">到期领币</el-button>
         </div>
         <div class="reward">
             <div class="title">火烧赤壁30天战役</div>
@@ -65,7 +65,7 @@
                 <div>倒计时：{{ state.userInfo.time30Diff.days }}天{{ state.userInfo.time30Diff.hours }}小时{{ state.userInfo.time30Diff.minutes }}分钟{{ state.userInfo.time30Diff.seconds }}秒</div>
                 <div>收益表：{{ state.pendingReward30 }} USDT</div>
             </div>
-            <el-button :loading="state.claim30Loading" :disabled="claim30Disabled" @click="handleClaim(30)">到期领币</el-button>
+            <el-button :loading="state.claim30Loading" :disabled="true" @click="handleClaim(30)">到期领币</el-button>
         </div>
         <div class="price">
             <img src="~images/home/205.png" alt="" />
